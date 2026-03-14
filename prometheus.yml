@@ -1,0 +1,13 @@
+global:
+  # How frequently to scrape targets by default
+  scrape_interval: 15s
+
+# A scrape configuration containing exactly one endpoint to scrape:
+# Here it's the OpenTelemetry Collector we configured earlier.
+scrape_configs:
+  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
+  - job_name: 'otel-collector'
+    static_configs:
+      # We target the 'otel-collector' service defined in our docker-compose.yml
+      # The port 8889 must match what we exposed in the otel-collector-config.yaml
+      - targets: ['otel-collector:8889']

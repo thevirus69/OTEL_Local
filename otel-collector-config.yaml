@@ -1,0 +1,27 @@
+# 1. RECEIVERS: How data gets IN to the collector
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: "0.0.0.0:4317"
+      http:
+        endpoint: "0.0.0.0:4318"
+
+# 2. PROCESSORS: What happens to the data while it's inside
+processors:
+  batch:
+
+# 3. EXPORTERS: How data gets OUT of the collector
+exporters:
+  prometheus:
+    endpoint: "0.0.0.0:8889"
+  debug:
+    verbosity: basic
+
+# 4. PIPELINES: Tying it all together
+service:
+  pipelines:
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [prometheus, debug]

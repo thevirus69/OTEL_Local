@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  # 1. Our Mock Application (Simulating an Ubuntu Server)
+  ubuntu-app:
+    build:
+      context: .
+      dockerfile: Dockerfile.ubuntu
+    # We want to make sure the collector is ready to receive metrics before the app starts
+    depends_on:
+      - otel-collector
+    environment:
+      # Tell the OpenTelemetry SDK where to send data via gRPC.
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+    networks:
+      - otel-net
+
+  # 2. Centralized Metrics Router (OpenTelemetry Collector)
+  otel-collector:
+    # We use the 'contrib' image because it includes the Prometheus exporter.
+    # The base 'otel/opentelemetry-collector' image only has otlp/debug exporters.
+    image: otel/opentelemetry-collector-contrib:latest
+    # Mount our configuration file into the container
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    ports:
+      - "4317:4317" # OTLP gRPC receiver (where the ubuntu-app sends data)
+      - "4318:4318" # OTLP HTTP receiver (alternative protocol)
+      - "8889:8889" # Prometheus metrics exporter (where Prometheus scrapes data)
+    networks:
+      - otel-net
+
+  # 3. Metrics Storage (Prometheus backend)
+  prometheus:
+    image: prom/prometheus:latest
+    # Mount our configuration file telling Prometheus who to scrape
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090" # Prometheus Web UI port
+    depends_on:
+      - otel-collector
+    networks:
+      - otel-net
+
+  # 4. Metrics Dashboard (Grafana)
+  grafana:
+    image: grafana/grafana:latest
+    # Mount our dashboard provisioning files so you don't have to manually configure UI panels
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    ports:
+      - "3000:3000" # Grafana Web UI port
+    depends_on:
+      - prometheus
+    networks:
+      - otel-net
+
+networks:
+  otel-net:
+    driver: bridge

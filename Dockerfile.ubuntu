@@ -1,0 +1,28 @@
+# We use a standard Ubuntu image to mimic a real server
+FROM ubuntu:22.04
+
+# Prevent interactive prompts when installing packages
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
+
+# Update package lists and install Python
+# (This is standard for setting up a fresh Ubuntu server)
+RUN apt-get update && \
+    apt-get install -y python3 python3-pip && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Set our working directory inside the container
+WORKDIR /app
+
+# Copy our Python dependencies file into the container
+COPY requirements.txt .
+
+# Install the OpenTelemetry Python SDK and exporter packages
+RUN pip3 install --no-cache-dir -r requirements.txt
+
+# Copy our application script that generates the mock CPU/Memory metrics
+COPY metric_generator.py .
+
+# When the container starts, run our Python script
+CMD ["python3", "metric_generator.py"]

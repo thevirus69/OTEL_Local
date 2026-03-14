@@ -1,0 +1,16 @@
+# requirements.txt
+
+# The core API
+opentelemetry-api
+
+# The SDK that actually implements the API and holds the state
+opentelemetry-sdk
+
+# The gRPC Exporter to send data to our Collector
+opentelemetry-exporter-otlp-proto-grpc
+
+# gRPC libraries (explicit for Docker compatibility)
+grpcio
+
+# Library to fetch real system metrics (CPU, Memory)
+psutil
