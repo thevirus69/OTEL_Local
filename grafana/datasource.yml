@@ -1,0 +1,11 @@
+apiVersion: 1
+
+datasources:
+  # This automatically connects Grafana to our Prometheus container
+  - name: Prometheus
+    type: prometheus
+    # The URL matches the service name and port in our docker-compose.yml
+    url: http://prometheus:9090
+    isDefault: true
+    access: proxy
+    editable: true
